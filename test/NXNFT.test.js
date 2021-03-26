@@ -25,6 +25,11 @@ contract('nexyohub', () => {
         addresses[0]).then(function(result){gasUsed=result});
       assert(address !== '');
   });
+  it('Return Address', async () => {
+      const Caddress=await hub.returnAddress();
+      console.log('    Address getter function returns:', Caddress);
+      assert(Caddress!==null);
+  });
   it('Check if it creates new pointer', async () => {
       await hub.makePointer(pointer);
       const result= await hub.isPointerthere(pointer);
@@ -36,16 +41,50 @@ contract('nexyohub', () => {
   });
   it('Try out mint function', async () => {
     const id=await hub.nextNFTid();
-    await hub.mint(pointer);
+    var newtokens;
+    for (newtokens=0; newtokens<5; newtokens++ ){
+      await hub.mint(pointer);
+    }
     const nextid=await hub.nextNFTid();
     assert(id!==nextid);
+  });
+  it('Return buyable Tokens', async () => {
+    const array=await hub.buyableTokens();
+    for (var x=0; x<array.length; x++) {
+      address=await hub.ownerOf(array[x]);
+      pointer=await hub.pointerOf(array[x]);
+      let tokenid=array[x]
+      console.log('   Token:',tokenid,address,pointer)
+    }
+    assert(array!==null);
+  });
+  it('Buy Token', async () => {
+    let contractbalance=null
+    var buyable=[];
+    var intermediat=null;
+    var id=await hub.nextNFTid();
+    for (var i=0; i<=id; i++) {
+      intermediat=await hub.ownerOf(i);
+      if (intermediat==address) {
+        buyable.push(i);
+      }
+    }
+    id=buyable[Math.floor(Math.random() * buyable.length)];
+    await hub.buy(id,{
+        from:addresses[2], value:1000000000000000000});
+    const tokenowner=await hub.ownerOf(id);
+    await web3.eth.getBalance(address).then(function(
+      result){contractbalance=result});
+    assert (tokenowner==addresses[2]);
+    assert (contractbalance>0);
+      console.log('   Contract\'s ETH balance:',contractbalance);
   });
   it('Add Data Owner', async () => {
     await hub.addDataOwner(addresses[1]);
     const result=await hub.isDataOwnerthere(addresses[1]);
     assert(result==true);
   });
-  it('Try out mint to function', async () => {
+  it('Try out mint-to function', async () => {
     const id=await hub.nextNFTid();
     await hub.mint_to(addresses[1],pointer);
     const nextid=await hub.nextNFTid();
@@ -77,6 +116,6 @@ contract('nexyohub', () => {
     const tx=await web3.eth.getTransaction(receipt.tx);
     const gasPrice=tx.gasPrice;
     assert(gasUsed!==0);
-    console.log('Unit Test Gas Usage:',Math.round(gasUsed/gasPrice));
+    console.log('   Unit Test Gas Usage:',Math.round(gasUsed/gasPrice));
   });
 });

@@ -15,4 +15,4 @@ node:
     - '5777'
     - --hostname
     - '0.0.0.0'
-    - --debug
+    - --noVMErrorsOnRPCResponse
