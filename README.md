@@ -2,7 +2,8 @@
 
 NFT Prototyp
 
-## Install node.js
+
+## Install Dependencies
 
 ```
 sudo apt install nodejs
@@ -14,20 +15,39 @@ sudo apt install nodejs
 npm install -g truffle
 ```
 
-## Start ganache
+### Metamask
 
+Setup metamask and select `localhost:8545` network.
+
+## Run
+
+### Start setup
 ```
 docker-compose up
 ```
 
-## Exec into ganache container
+### Load contract into ganache
+```
+npx truffle migrate
+```
+
+### Setup metamask account
+
+From the docker-compose log output copy the first private key and create a account in metamask.
+
+:TODO: describe keys and roles
+
+
+
+## Misc
+### Exec into ganache container
 
 ```
 docker exec -it nft-prototyp_node_1 /bin/sh
 ```
 
-## To test run within the /nft-prototyp
+### To test run within the /nft-prototyp
 
 ```
-truffle test
+npx truffle test
 ```
