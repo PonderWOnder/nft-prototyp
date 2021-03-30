@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 contract nexyohub {
   uint _minstake = 32000000000000000000;
-  mapping(string => bool) private pointerExists;
+  mapping(string => uint8) private pointerExists;
   mapping(address => bool) private DataOwners;
   mapping(uint => address) public owners;
   mapping(uint => string) public pointers;
@@ -15,6 +15,9 @@ contract nexyohub {
   string sign_;
   address payable owner;
   uint token_id=0;
+  uint pointer_id=0;
+  uint pointer_uid=0;
+  string[] pointerarray;
   uint stdPrice=1000000000000000000;
 
   constructor(string memory _name) {
@@ -49,11 +52,21 @@ contract nexyohub {
   }
 
   function makePointer (string memory pointer) public onlyOwner {
-    pointerExists[pointer]=true;
+    require(pointerExists[pointer]!=1,'Pointer is already useable');
+    if (pointerExists[pointer]==0) {
+      pointerExists[pointer]=1;
+      pointerarray.push(pointer);
+      pointer_id++;
+    } else {
+      pointerExists[pointer]=1;
+      pointer_uid--;
+    }
   }
 
   function revokePointer (string memory pointer) public onlyOwner {
-    pointerExists[pointer]=false;
+    require(isPointerthere(pointer)==true,'Pointer is already unuseable');
+    pointerExists[pointer]=2;
+    pointer_uid++;
   }
 
   function mint_to (address newowner, string memory pointer) public {
@@ -83,9 +96,9 @@ contract nexyohub {
     token_id++;
   }
 
-  function setPrice (uint price, uint token) public {
+  function setPrice (uint cost, uint token) public {
     require(owners[token]==msg.sender, 'This Operation can only be accessed by the token owner');
-    prices[token]=price*stdPrice;
+    prices[token]=cost*stdPrice;
   }
 
   function transferFrom(address _from, address _to, uint _tokenId) public payable {
@@ -158,7 +171,28 @@ contract nexyohub {
     return len;
   }
 
-  function price (uint token) external view returns (uint) {
+  function myTokens(address sender) external view returns(uint[] memory) {
+    uint[] memory array;
+    array=OwnerShip[sender];
+    return array;
+  }
+
+  function useablePointers() external view returns (string[] memory) {
+    string[] memory somepointers= new string[](pointer_id-pointer_uid);
+    uint len=pointerarray.length;
+    uint x=0;
+    string memory point='';
+    for (uint i=0; i<len; i++) {
+      point=pointerarray[i];
+      if (isPointerthere(point)) {
+        somepointers[x]=point;
+        x++;
+      }
+    }
+    return somepointers;
+  }
+
+  function price(uint token) external view returns (uint) {
     return prices[token];
   }
 
@@ -179,7 +213,7 @@ contract nexyohub {
   }
 
   function isPointerthere (string memory pointer) public view returns (bool){
-    return pointerExists[pointer]==true;
+    return pointerExists[pointer]==1;
   }
 
   function isDataOwnerthere (address dataowner) public view returns (bool){
