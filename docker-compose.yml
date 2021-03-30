@@ -1,18 +1,32 @@
-node:
-  image: trufflesuite/ganache-cli:latest
-  ports:
-    - "8545:8545"
-  volumes:
-    - ./ganache_data:/ganache_data
-  entrypoint:
-    - node
-    - /app/ganache-core.docker.cli.js
-    - --deterministic
-    - --db=/ganache_data
-    - --mnemonic
-    - 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
-    - --networkId
-    - '5777'
-    - --hostname
-    - '0.0.0.0'
-    - --noVMErrorsOnRPCResponse
+version: '2.1'
+
+services:
+  node:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./ganache_data:/ganache_data
+    entrypoint:
+      - node
+      - /app/ganache-core.docker.cli.js
+      - --deterministic
+      - --db=/ganache_data
+      - --mnemonic
+      - 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
+      - --networkId
+      - '5777'
+      - --hostname
+      - '0.0.0.0'
+      - --noVMErrorsOnRPCResponse
+
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway/
+      dockerfile: Dockerfile
+    ports:
+      - "8090:80"
+    volumes:
+      - ./gateway/app:/app
+    entrypoint: ['/start-reload.sh']
