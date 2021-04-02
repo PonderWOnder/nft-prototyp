@@ -142,13 +142,15 @@ class App extends Component {
     }
   }
 
-  resttoken = async (e,msg,id) => {
+  resttoken = async (e,msg,add,id) => {
     e.preventDefault();
+    msg=msg.substring(2)
+    console.log(msg);
     let hash=await window.web3.utils.sha3(msg);
     console.log(hash);
-    let hmsg= await window.web3.eth.sign(hash,id)
+    let hmsg= await window.web3.eth.sign(hash,add)
     console.log(hmsg);
-    return hash, hmsg;
+    console.log(hash+id+hmsg);
   }
 
   buytoken = (e, id) => {

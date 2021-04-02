@@ -24,9 +24,10 @@ services:
     container_name: gateway
     build:
       context: ./gateway/
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
     ports:
       - "8090:80"
     volumes:
       - ./gateway/app:/app
+      - ./react-src/src/contracts/:/contracts
     entrypoint: ['/start-reload.sh']

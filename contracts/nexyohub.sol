@@ -196,11 +196,11 @@ contract nexyohub {
     return prices[token];
   }
 
-  function ownerOf(uint256 _tokenId) external view returns (address) {
+  function ownerOf(uint _tokenId) external view returns (address) {
     return owners[_tokenId];
   }
 
-  function pointerOf(uint256 _tokenId) external view returns (string memory) {
+  function pointerOf(uint _tokenId) external view returns (string memory) {
     return pointers[_tokenId];
   }
 
