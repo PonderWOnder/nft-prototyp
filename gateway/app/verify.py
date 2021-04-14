@@ -6,7 +6,7 @@ import json
 class connect():
 
     def __init__ (self,node=None,location=None):
-        self.node='http://172.18.0.2:8545' if node==None else node
+        self.node='http://172.18.0.3:8545' if node==None else node
         self.web3 = Web3(Web3.HTTPProvider(self.node))
         print('Gateway is connected:',self.web3.isConnected())
         self.recover=w3.eth.account.recoverHash
@@ -37,3 +37,8 @@ class connect():
             return True,pointer
         else:
             return False,pointer
+
+class dataclass(): #own class is propably overkill but let's see were this goes...
+
+    def __init__(self):
+        self.owners={'apply':[]}

@@ -35,8 +35,8 @@ contract('nexyohub', () => {
       const result= await hub.isPointerthere(pointer);
       assert(result==true);
   });
-  it('Check if it makes itself dataowner', async () => {
-      const response=await hub.isDataOwnerthere(address);
+  it('Check if it makes owner dataowner', async () => {
+      const response=await hub.isDataOwnerthere(owner);
       assert(response==true);
   });
   it('Try out mint function', async () => {
@@ -47,16 +47,6 @@ contract('nexyohub', () => {
     }
     const nextid=await hub.nextNFTid();
     assert(id!==nextid);
-  });
-  it('Return buyable Tokens', async () => {
-    const array=await hub.buyableTokens();
-    for (var x=0; x<array.length; x++) {
-      address=await hub.ownerOf(array[x]);
-      pointer=await hub.pointerOf(array[x]);
-      let tokenid=array[x]
-      console.log('   Token:',tokenid,address,pointer)
-    }
-    assert(array!==null);
   });
   it('Buy Token', async () => {
     let contractbalance=null
@@ -79,8 +69,18 @@ contract('nexyohub', () => {
     assert (contractbalance>0);
       console.log('   Contract\'s ETH balance:',contractbalance);
   });
+  it('Return buyable Tokens', async () => {
+    const array=await hub.buyableTokens();
+    for (var x=0; x<array.length; x++) {
+      address=await hub.ownerOf(array[x]);
+      pointer=await hub.pointerOf(array[x]);
+      let tokenid=array[x]
+      console.log('   Token:',tokenid,address,pointer)
+    }
+    assert(array!==null);
+  });
   it('Add Data Owner', async () => {
-    await hub.addDataOwner(addresses[1]);
+    await hub.addDataOwner(addresses[1],0);
     const result=await hub.isDataOwnerthere(addresses[1]);
     assert(result==true);
   });
