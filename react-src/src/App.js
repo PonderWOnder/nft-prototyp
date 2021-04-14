@@ -262,18 +262,18 @@ class App extends Component {
       <div className='relative rounded-xl shadow-md'>
         {Nav}
         {this.state.finished ?
-          <div className='text-center'>
-            <div>
+          <div className='flex flex-col'>
+            <div className="flex justify-center">
               {this.state.OwnerPresent ? MainContent : this.state.DataOwnerPresent ? MainContent2 : <div></div>}
             </div>
-            <div>
+            <div className="flex justify-center flex-col">
               <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken}/>
               <Buyables buyable={this.state.buyable} buytoken={this.buytoken}/>
-              <a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a>
+              <div className="text-center"><a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a></div>
             </div>
           </div>
         :
-          <div className='fixed'>
+          <div className='flex justify-center'>
             <Loader type="Hearts" color="#00BFFF" height={180} width={180} />
           </div>
       }
