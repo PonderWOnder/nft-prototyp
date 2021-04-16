@@ -1,3 +1,5 @@
 ganache_data
 node_modules
 package-lock.json
+gateway/app/__pycache__
+react-src/src/contracts
