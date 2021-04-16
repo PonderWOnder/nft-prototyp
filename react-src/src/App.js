@@ -6,6 +6,7 @@ import DataOwner from './components/DataOwner'
 import NavBar from './components/NavBar'
 import Buyables from './components/Buyables'
 import Tokens from './components/Tokens'
+import Cred from './components/cred_card'
 import nexyohub from './contracts/nexyohub.json'
 import Web3 from 'web3';
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
@@ -42,11 +43,6 @@ const getWeb3 = () =>
 
 
 class App extends Component {
-
-  async componentWillMount() {
-    this.loadConnection().then(() => {
-    this.loadBlockchainData()});
-    }
 
   async loadBlockchainData() {
     const web3 = window.web3
@@ -126,11 +122,13 @@ class App extends Component {
         newline=[id,
           await Hub.methods.ownerOf(id).call(),
           await Hub.methods.pointerOf(id).call(),
-          await Hub.methods.priceOf(id).call()
+          await Hub.methods.priceOf(id).call(),
+          await Hub.methods.tokensellable(id).call()
         ];
         MyTokens.push(newline);
       }
-      this.setState({MyTokens: MyTokens})
+      console.log('My Tokens', MyTokens);
+      this.setState({MyTokens: MyTokens});
       this.setState({UNFTbalance: UNFTbalance});
 
     } else {
@@ -169,49 +167,67 @@ class App extends Component {
     }
   }
 
+  next_token = async () => {
+    return await this.state.Hub.methods.nextPointerid().call();
+  }
+
   resttoken = async (e,msg,add,id) => {
-    msg=msg.substring(2)
+    await this.setState({finished: false});
+    msg=msg.substring(2);
     console.log(msg);
     let hash=await window.web3.utils.sha3(msg);
     console.log(hash);
-    let hmsg= await window.web3.eth.sign(hash,add)
+    let hmsg= await window.web3.eth.sign(hash,add);
     console.log(hmsg);
-    const apicall=hash+id+hmsg
+    const apicall=hash+id+hmsg;
     console.log(apicall);
     window.open('http://localhost:8090/verify/'+apicall,'Data','height=640,width=480');
+    await this.setState({finished: true});
   }
 
   doyouownPointer = async (pointer) => {
     let answer= await this.state.Hub.methods.doyouownPointer(pointer).call();
     console.log("do you own",pointer,answer);
+    this.loadBlockchainData();
   }
 
-  buytoken = (e, id) => {
+  buytoken = async (e, id) => {
     console.log('Let me see some ID:',id);
-    this.setState({finished: false});
-    this.state.Hub.methods.priceOf(id).call().then(price => {
-    this.state.Hub.methods.buy(id).send({from:this.state.Uaccount.toString(),value:price.toString()})})
-    this.setState({finished: true})
-    console.log('bought')
+    await this.setState({finished: false});
+    let price=await this.state.Hub.methods.priceOf(id).call();
+    await this.state.Hub.methods.buy(id).send({from:this.state.Uaccount.toString(),value:price.toString()});
+    this.setState({finished: true});
+    console.log('bought');
+    this.loadBlockchainData();
   };
 
-  mint = async (e,pointer) => {
+  selltoken = async (e, id) => {
+    console.log('Let me see some ID:',id);
     this.setState({finished: false});
+    await this.state.Hub.methods.sell(id).send({from:this.state.Uaccount.toString()});
+    this.setState({finished: true});
+    console.log('sold');
+    this.loadBlockchainData();
+  }
+
+  mint = async (e,pointer) => {
+    await this.setState({finished: false});
     await this.doyouownPointer(pointer);
     await this.state.Hub.methods.mint(pointer).send({from:this.state.Uaccount.toString()})
     console.log(pointer);
-    this.setState({finished: true})
+    await this.setState({finished: true})
+    this.loadBlockchainData();
   }
 
-  makePointer =(e,string) => {
+  makePointer =async (e,string) => {
     this.setState({finished: false});
-    this.state.Hub.methods.isPointerthere(string).call().then(result => {
-      if(result===false){
-        this.state.Hub.methods.makePointer(string).send({from:this.state.Uaccount.toString()})
-      }
-      else {console.log('Pointer already exists with the contract');}
-    })
+    let result= await this.state.Hub.methods.isPointerthere(string).call()
+    if(result===false){
+      await this.state.Hub.methods.makePointer(string).send({from:this.state.Uaccount.toString()})
+    }
+    else {console.log('Pointer already exists with the contract');}
     this.setState({finished: true});
+    this.loadBlockchainData();
   }
 
   approvePointers = async (e,pointers) => {
@@ -219,6 +235,7 @@ class App extends Component {
     console.log(pointers)
     await this.state.Hub.methods.approvePointers(pointers).send({from:this.state.Uaccount.toString()});
     this.setState({finished: true});
+    this.loadBlockchainData();
 
   }
 
@@ -228,12 +245,17 @@ class App extends Component {
     this.setState({finished: true});
   }
 
-  addDataOwner =(e,address) => {
+  addDataOwner = async (e,address) => {
     this.setState({finished: false});
-    this.state.Hub.methods.addDataOwner(address).send({from:this.state.Uaccount.toString()});
+    await this.state.Hub.methods.addDataOwner(address).send({from:this.state.Uaccount.toString()});
     this.setState({finished: true});
+    this.loadBlockchainData();
   }
 
+  componentWillMount() {
+    this.loadConnection().then(() => {
+    this.loadBlockchainData()});
+    }
 
   render() {
     let MainContent= <Main
@@ -267,7 +289,7 @@ class App extends Component {
               {this.state.OwnerPresent ? MainContent : this.state.DataOwnerPresent ? MainContent2 : <div></div>}
             </div>
             <div className="flex justify-center flex-col">
-              <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken}/>
+              <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken} selltoken={this.selltoken}/>
               <Buyables buyable={this.state.buyable} buytoken={this.buytoken}/>
               <div className="text-center"><a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a></div>
             </div>

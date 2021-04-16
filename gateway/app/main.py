@@ -10,6 +10,11 @@ app = FastAPI()
 data=dataclass()
 characters=[chr(i) for i in range(48,58)]+[chr(a) for a in range(97,123)]
 
+class pointer(BaseModel):
+    URI: str
+    User: str=''
+    PW: str=''
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -24,20 +29,13 @@ async def verify_signature(add: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@app.get("/apply")
-def return_applicants():
-    try:
-        return data.owners['apply']
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
 
 @app.post("/apply")
-async def set_applicants(address: str):
+async def set_login(Pointer:pointer):
     try:
-        if len(address)!=42: raise
-        for ch in address.lower():
-            if ch not in characters: raise
-        data.owners['apply'].append(address)
-        return address
+        data.logins[Pointer.URI]={'User':Pointer.User,'PW':Pointer.PW}
+        print('Got Data in')
+        return data.logins[Pointer.URI]
     except Exception as e:
+        print('Something went wrong')
         raise ValueError(status_code=404, detail=str(e))

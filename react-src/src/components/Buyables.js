@@ -11,7 +11,7 @@ class Buyables extends Component {
             <span className='truncate'>  {token[1]} </span>
             <span>  {token[2]} </span>
             <span>  {window.web3.utils.fromWei(token[3].toString(), 'ether').substring(0,6)} ETH </span>
-            <button className='hover:bg-green-400 hover:text-white' onClick={e => this.props.buytoken(e, token[0])}>
+            <button className='hover:bg-green-400 hover:text-white px-2' onClick={e => this.props.buytoken(e, token[0])}>
               <span>  Buy </span>
             </button>
           </p>

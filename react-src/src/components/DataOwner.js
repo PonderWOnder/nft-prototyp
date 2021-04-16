@@ -1,11 +1,12 @@
 import React,{Component} from 'react'
-
+import Cred from './cred_card'
 class DataOwner extends Component {
 
   constructor(props) {
     super(props);
     this.state={
-      submit:null
+      submit:'',
+      window:false
     }
   }
 
@@ -21,19 +22,29 @@ class DataOwner extends Component {
     console.log(this.state.submit)})
   }
 
+  handleMenu = (e) => {
+    e.preventDefault();
+    let new_state=!this.state.window;
+    this.setState({window: new_state});
+
+  }
+
   render() {
     return(
       <div>
         <div className='flex item-center'>
           <div>
             <form onSubmit={(e) => this.handleChange(e)}>
-              <label> Create Pointer
-                <input className='w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
+              <label className=''> Pointer
+                <input className='rounded-xl bg-gray-200 focus:bg-white w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
               </label>
             </form>
           </div>
           <div>
-            <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.makePointer(e,this.state.submit)}>Submit</button>
+            <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.handleMenu(e)}>Create</button>
+          </div>
+          <div>
+            {this.state.window ? <Cred Pointer={this.state.submit} makePointer={this.props.makePointer} Menu={this.handleMenu}/> : <div></div>}
           </div>
         </div>
         <div className='flex item-center'>

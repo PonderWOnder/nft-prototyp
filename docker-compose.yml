@@ -1,7 +1,9 @@
 version: '2.1'
 
 services:
+  
   node:
+    container_name: node
     image: trufflesuite/ganache-cli:latest
     ports:
       - "8545:8545"
@@ -31,3 +33,5 @@ services:
       - ./gateway/app:/app
       - ./react-src/src/contracts/:/contracts
     entrypoint: ['/start-reload.sh']
+    
+

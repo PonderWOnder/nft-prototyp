@@ -122,7 +122,7 @@ contract nexyohub {
     NFTArrayPos[token_id]=len;
     pointers[token_id]=pointer;
     prices[token_id]=stdPrice;
-    sellable[token_id]=true;
+    sellable[token_id]=false;
     token_id++;
   }
 
@@ -173,6 +173,12 @@ contract nexyohub {
   function buy(uint _tokenid) external payable {
     require(sellable[_tokenid]==true, "You only can buy NFTs marked as sellable");
     transferFrom(owners[_tokenid], msg.sender, _tokenid);
+    sellable[_tokenid]=false; // Still a design choice where to put the sell inteaction
+  }
+
+  function sell(uint _tokenid) external {
+    require(owners[_tokenid]==msg.sender, "You only can sell stuff you own");
+    sellable[_tokenid]=true;
   }
 
   //this needs a redo since only the contract can sell tokens now. Using a parameter in external view is suboptimal
@@ -234,6 +240,10 @@ contract nexyohub {
 
   function pointerOf(uint _tokenId) external view returns (string memory) {
     return pointers[_tokenId];
+  }
+
+  function tokensellable(uint _tokenId) external view returns (bool) {
+    return sellable[_tokenId];
   }
 
   function addDataOwner(address dataowner) external onlyOwner {
@@ -313,7 +323,7 @@ contract nexyohub {
   }
 
   function nextPointerid () public view returns(uint){
-    return token_id;
+    return pointer_id;
   }
 
   function returnContractName () public view returns (string memory){

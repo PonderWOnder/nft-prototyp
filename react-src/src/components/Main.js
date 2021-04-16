@@ -42,7 +42,7 @@ class Main extends Component {
           <div>
             <form onSubmit={(e) => this.handleChange(e)}>
               <label> Create Pointer
-                <input className='w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
+                <input className='rounded-xl bg-gray-200 focus:bg-white w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
               </label>
             </form>
           </div>
@@ -50,15 +50,15 @@ class Main extends Component {
             <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.makePointer(e,this.state.submit)}>Submit</button>
           </div>
         </div>
-        <div className='flex item-center'>
+        <div className='flex item-center mt-2'>
           <form onSubmit={(e) => this.handleChange(e)}>
             <label> Add Data Owner
-              <input className='w-40 px-4' type='text' placeholder='new Data Owner' onChange={(e) => this.handleChange(e)}/>
+              <input className='rounded-xl bg-gray-200 focus:bg-white w-40 px-4' type='text' placeholder='new Data Owner' onChange={(e) => this.handleChange(e)}/>
             </label>
           </form>
           <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.addDataOwner(e,this.state.submit)}>Add</button>
         </div>
-        <div className='flex item-center'>
+        <div className='flex item-center mt-2'>
           <div>
             <select defaultValue='Choose here' onChange={(e) => this.handleChange(e)} placeholder='Pointers'>
               <option selected disabled hidden>Choose here</option>
