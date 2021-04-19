@@ -93,6 +93,7 @@ class App extends Component {
       this.setState({buyable: arr});
 
       let Pointers=await Hub.methods.useablePointers().call(); //This should be done in contract
+      this.setState({Pointers:[]});
       for (var x=0; x<Pointers.length; x++) {
         let des=await Hub.methods.doyouownPointer(Pointers[x]).call({from:this.state.Uaccount});
         console.log(des,Pointers[x]);
@@ -228,6 +229,7 @@ class App extends Component {
     else {console.log('Pointer already exists with the contract');}
     this.setState({finished: true});
     this.loadBlockchainData();
+    return result;
   }
 
   approvePointers = async (e,pointers) => {
@@ -236,7 +238,14 @@ class App extends Component {
     await this.state.Hub.methods.approvePointers(pointers).send({from:this.state.Uaccount.toString()});
     this.setState({finished: true});
     this.loadBlockchainData();
+  }
 
+  revokePointers = async (e,pointers) => {
+    this.setState({finished: false});
+    console.log('Pointers',pointers)
+    await this.state.Hub.methods.revokePointers(pointers).send({from:this.state.Uaccount.toString()});
+    this.setState({finished: true});
+    this.loadBlockchainData();
   }
 
   applyforDataOwner =(e,address) => {
@@ -247,9 +256,14 @@ class App extends Component {
 
   addDataOwner = async (e,address) => {
     this.setState({finished: false});
-    await this.state.Hub.methods.addDataOwner(address).send({from:this.state.Uaccount.toString()});
+    let result= await this.state.Hub.methods.isDataOwnerthere(address).call()
+    if(result===false){
+      await this.state.Hub.methods.addDataOwner(address).send({from:this.state.Uaccount.toString()});
+    }
+    else {console.log('User already is Data Owner')}
     this.setState({finished: true});
     this.loadBlockchainData();
+    return result
   }
 
   componentWillMount() {
@@ -264,6 +278,7 @@ class App extends Component {
       makePointer={this.makePointer}
       PointerstoApprove={this.state.PointerstoApprove}
       approvePointers={this.approvePointers}
+      revokePointers={this.revokePointers}
       addDataOwner={this.addDataOwner}/>
 
       let MainContent2= <DataOwner
@@ -281,24 +296,26 @@ class App extends Component {
         ContractName={this.state.ContractName}/>
 
     return(
-      <div className='relative rounded-xl shadow-md'>
-        {Nav}
-        {this.state.finished ?
-          <div className='flex flex-col'>
-            <div className="flex justify-center">
-              {this.state.OwnerPresent ? MainContent : this.state.DataOwnerPresent ? MainContent2 : <div></div>}
+      <div className='flex h-screen w-full h-full fixed block top-0 left-0'>
+        <div className='relative m-auto relative rounded-xl shadow z-30'>
+          {Nav}
+          {this.state.finished ?
+            <div className='flex flex-col'>
+              <div className="flex justify-center">
+                {this.state.OwnerPresent ? MainContent : this.state.DataOwnerPresent ? MainContent2 : <div></div>}
+              </div>
+              <div className="flex justify-center flex-col">
+                <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken} selltoken={this.selltoken}/>
+                <Buyables buyable={this.state.buyable} buytoken={this.buytoken}/>
+                <div className="text-center"><a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a></div>
+              </div>
             </div>
-            <div className="flex justify-center flex-col">
-              <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken} selltoken={this.selltoken}/>
-              <Buyables buyable={this.state.buyable} buytoken={this.buytoken}/>
-              <div className="text-center"><a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a></div>
+          :
+            <div className='flex justify-center'>
+              <Loader type="Hearts" color="#00BFFF" height={180} width={180} />
             </div>
-          </div>
-        :
-          <div className='flex justify-center'>
-            <Loader type="Hearts" color="#00BFFF" height={180} width={180} />
-          </div>
-      }
+        }
+        </div>
       </div>
     )
   }

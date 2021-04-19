@@ -79,10 +79,14 @@ contract nexyohub {
       }
   }
 
-  function revokePointer (string memory pointer) public onlyOwner {
-    require(isPointerthere(pointer)!=true,'Pointer is already unuseable');
-    pointerExists[pointer]=2;
-    pointer_uid++;
+  function revokePointers (string[] memory pointers) public onlyOwner {
+    uint len=pointers.length;
+    for (uint i=0;i<len;i++) {
+      require(isPointerthere(pointers[i])!=true,'Pointer is already unuseable');
+      if(pointerExists[pointers[i]]==3) {
+        pointerstoapprove--;}
+      pointerExists[pointers[i]]=2;
+    }
   }
 
   function approvePointers (string[] memory pointers) public onlyOwner {

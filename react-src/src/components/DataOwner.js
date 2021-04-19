@@ -41,7 +41,7 @@ class DataOwner extends Component {
             </form>
           </div>
           <div>
-            <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.handleMenu(e)}>Create</button>
+            <button className='rounded-lg px-4 hover:bg-green-400 hover:text-white' onClick={e => this.handleMenu(e)}>Create</button>
           </div>
           <div>
             {this.state.window ? <Cred Pointer={this.state.submit} makePointer={this.props.makePointer} Menu={this.handleMenu}/> : <div></div>}
@@ -57,7 +57,7 @@ class DataOwner extends Component {
             </select>
           </div>
           <div>
-            <button className='px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.mint(e,this.state.submit)}>MINT</button>
+            <button className='rounded-lg px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.mint(e,this.state.submit)}>MINT</button>
           </div>
         </div>
       </div>
