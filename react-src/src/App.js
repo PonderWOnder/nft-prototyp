@@ -45,11 +45,12 @@ const getWeb3 = () =>
 class App extends Component {
 
   async loadBlockchainData() {
-    const web3 = window.web3
-    const account=await web3.eth.getAccounts()
-    this.setState({Uaccount: account[0]})
-    const networkID=await web3.eth.net.getId()
-    const NexyoHub=await nexyohub.networks[networkID]
+    const web3 = window.web3;
+    this.setState({web3: web3});
+    const account=await web3.eth.getAccounts();
+    this.setState({Uaccount: account[0]});
+    const networkID=await web3.eth.net.getId();
+    const NexyoHub=await nexyohub.networks[networkID];
     if(NexyoHub) {
 
       let Hub=new web3.eth.Contract(nexyohub.abi,NexyoHub.address);
@@ -85,7 +86,9 @@ class App extends Component {
         var newline=[id,
           await Hub.methods.ownerOf(id).call(),
           await Hub.methods.pointerOf(id).call(),
-          await Hub.methods.priceOf(id).call()
+          await Hub.methods.priceOf(id).call(),
+          await Hub.methods.tokenresellable(id).call(), //this returns false if token is resellable. This is confusing but solidity initializes everything with 0 and well... it is stupid but this is how i have done it!
+          await Hub.methods.tokenownable(id).call() //this is the posix time in milliseconds when your right to connect is revoked. If 0 you are owner of the bloody thing...
         ];
         arr.push(newline);
         }
@@ -116,15 +119,18 @@ class App extends Component {
       this.setState({PointerstoApprove: PointerstoApprove});
 
       let myTokens=await Hub.methods.myTokens(account[0]).call();
+      console.log('My token ids', myTokens)
       let UNFTbalance=myTokens.length;
       let MyTokens=[]
       for (i=0; i<UNFTbalance;i++){
         let id=myTokens[i];
-        newline=[id,
+        newline=[id,// this is index 0!!!
           await Hub.methods.ownerOf(id).call(),
           await Hub.methods.pointerOf(id).call(),
           await Hub.methods.priceOf(id).call(),
-          await Hub.methods.tokensellable(id).call()
+          await Hub.methods.tokensellable(id).call(),
+          await Hub.methods.tokenresellable(id).call(),
+          await Hub.methods.tokenexpires(id).call()
         ];
         MyTokens.push(newline);
       }
@@ -162,6 +168,7 @@ class App extends Component {
       MyTokens:[],
       Pointers:[],
       PointerstoApprove:[],
+      web3: null,
       OwnerPresent:false,
       DataOwnerPresent:false,
       finished:false
@@ -248,7 +255,7 @@ class App extends Component {
     this.loadBlockchainData();
   }
 
-  applyforDataOwner =(e,address) => {
+  applyforDataOwner = (e,address) => {
     this.setState({finished: false});
     e.preventDefault();
     this.setState({finished: true});
@@ -266,6 +273,15 @@ class App extends Component {
     return result
   }
 
+  mintwithOptions = async (e,sub,res,dat,sell) => {
+    this.setState({finished: false});
+    dat=dat*86400
+    console.log(sub,res,dat)
+    await this.state.Hub.methods.mintwithOptions(sub,res,dat,sell).send({from:this.state.Uaccount.toString()});
+    this.loadBlockchainData();
+  }
+
+
   componentWillMount() {
     this.loadConnection().then(() => {
     this.loadBlockchainData()});
@@ -279,12 +295,14 @@ class App extends Component {
       PointerstoApprove={this.state.PointerstoApprove}
       approvePointers={this.approvePointers}
       revokePointers={this.revokePointers}
-      addDataOwner={this.addDataOwner}/>
+      addDataOwner={this.addDataOwner}
+      mintwithOptions={this.mintwithOptions}/>
 
       let MainContent2= <DataOwner
         mint={this.mint}
         Pointers={this.state.Pointers}
-        makePointer={this.makePointer}/>
+        makePointer={this.makePointer}
+        mintwithOptions={this.mintwithOptions}/>
 
       let Nav= <NavBar
         Uaccount={this.state.Uaccount}
@@ -305,9 +323,9 @@ class App extends Component {
                 {this.state.OwnerPresent ? MainContent : this.state.DataOwnerPresent ? MainContent2 : <div></div>}
               </div>
               <div className="flex justify-center flex-col">
-                <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken} selltoken={this.selltoken}/>
+                <Tokens MyTokens={this.state.MyTokens} resttoken={this.resttoken} selltoken={this.selltoken} Pointers={this.state.Pointers}/>
                 <Buyables buyable={this.state.buyable} buytoken={this.buytoken}/>
-                <div className="text-center"><a className='text-red-500' href="https://www.nexyo.org">Nexyo.org</a></div>
+                <div className="text-center"><a className='text-red-500' href="https://www.nexyo.io">Nexyo.io</a></div>
               </div>
             </div>
           :

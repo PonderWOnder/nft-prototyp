@@ -1,7 +1,9 @@
 from web3 import Web3
 from web3.auto import w3
 from os import path
+from time import time
 import json
+
 
 class connect():
 
@@ -31,9 +33,10 @@ class connect():
         tokens=self.contract.functions.myTokens(self.getaddress(msghash,sig)).call()
         owner=self.contract.functions.ownerOf(int(token_id)).call()
         pointer=self.contract.functions.pointerOf(int(token_id)).call()
+        expirer=self.contract.functions.tokenexpires(int(token_id)).call()
         text=owner[2:]+pointer
         localhash=self.web3.keccak(text=text).hex()
-        if int(token_id) in tokens and msghash==localhash:
+        if int(token_id) in tokens and msghash==localhash and (expirer==0 or time()<expirer):
             return True,pointer
         else:
             return False,pointer

@@ -8,8 +8,11 @@ contract nexyohub {
   mapping(uint => uint) public prices;
   mapping(uint => bool) public sellable;
 //Contract capabilities to make the app possible
+  mapping(uint => bool) private resell;
+  mapping(uint => uint) private clock;
+  mapping(uint => uint) private expirer;
   mapping(string => uint8) private pointerExists; //Keeps Track of Pointer Status. 0 Does not exists, 1 Pointer is useable, 2 Pointer was revoked, 3 Pointer still needs Owner approval.
-  mapping(address => uint[]) private DataOwners;
+  mapping(address => uint[]) private DataOwners; //Tracks the Pointers owned by a specific address
   mapping(address => uint[]) private OwnerShip; //Tracks NFT Ownership for fast ownership requests
   mapping(uint => uint) private NFTArrayPos; //Tracks NFT postion in Ownership Array for fast ownership requests
   string name_;
@@ -19,12 +22,13 @@ contract nexyohub {
   uint pointer_id=0;
   uint pointer_uid=0;
   uint pointerstoapprove=0;
-  string[] pointerarray;
+  string[] pointerarray; //I don't like how this is structured. It really needs a rework!
+  address[] PointerOwners; //Same here! Also this makes it practacally impossible to use a revoked Pointer by another User...
 
   uint _minstake=32000000000000000000;
   uint stdPrice=1000000000000000000;
 
-  constructor(string memory _name) {
+  constructor(string memory _name) { //sign_ will get an option too!
     require(msg.sender.balance >= _minstake, 'Please provide suffient Funds');
     name_=_name;
     sign_='NXNFT';
@@ -63,6 +67,7 @@ contract nexyohub {
           pointer_uid++;
         }
         pointerarray.push(pointer);
+        PointerOwners.push(msg.sender);
         if (DataOwners[msg.sender].length>0) {
           if (DataOwners[msg.sender][0]>pointer_id) { //checks if first entry is approval entry
             DataOwners[msg.sender][0]=pointer_id;
@@ -79,21 +84,21 @@ contract nexyohub {
       }
   }
 
-  function revokePointers (string[] memory pointers) public onlyOwner {
-    uint len=pointers.length;
+  function revokePointers (string[] memory _pointers) public onlyOwner {
+    uint len=_pointers.length;
     for (uint i=0;i<len;i++) {
-      require(isPointerthere(pointers[i])!=true,'Pointer is already unuseable');
-      if(pointerExists[pointers[i]]==3) {
+      require(isPointerthere(_pointers[i])!=true,'Pointer is already unuseable');
+      if(pointerExists[_pointers[i]]==3) {
         pointerstoapprove--;}
-      pointerExists[pointers[i]]=2;
+      pointerExists[_pointers[i]]=2;
     }
   }
 
-  function approvePointers (string[] memory pointers) public onlyOwner {
-    uint len=pointers.length;
+  function approvePointers (string[] memory _pointers) public onlyOwner {
+    uint len=_pointers.length;
     for (uint i=0;i<len;i++) {
-      if(pointerExists[pointers[i]]==3){
-        pointerExists[pointers[i]]=1;
+      if(pointerExists[_pointers[i]]==3){
+        pointerExists[_pointers[i]]=1;
         pointerstoapprove--;
         pointer_uid--;
       }
@@ -127,19 +132,61 @@ contract nexyohub {
     pointers[token_id]=pointer;
     prices[token_id]=stdPrice;
     sellable[token_id]=false;
+    resell[token_id]=false;
+    clock[token_id]=0;
+    token_id++;
+  }
+
+  function mintwithOptions (string memory pointer, bool _resell, uint _timeLock, bool _sell) public {
+    require(isPointerthere(pointer), 'Provided Pointer does not exist with contract');
+    require(isDataOwnerthere(msg.sender), 'You have not sufficient rights for this action');
+    require(doyouownPointer(pointer), 'You do not own this pointer');
+    owners[token_id]=msg.sender;
+    uint len;
+    OwnerShip[msg.sender].push(token_id);
+    len=OwnerShip[msg.sender].length-1;
+    NFTArrayPos[token_id]=len;
+    pointers[token_id]=pointer;
+    prices[token_id]=stdPrice;
+    sellable[token_id]=_sell;
+    if (!_resell) {
+      resell[token_id]=!_resell;
+    }
+    if (_timeLock!=0) {
+      clock[token_id]=_timeLock;
+    }
     token_id++;
   }
 
   function setPrice (uint cost, uint token) public {
-    require(owners[token]==msg.sender, 'This Operation can only be accessed by the token owner');
+    require(owners[token]==msg.sender, 'This Operation can only be accessed by the Token Owner');
     prices[token]=cost*stdPrice;
+  }
+
+  function resellOptions(uint _tokenid, bool _resell, uint _timeLock) external {
+    require(doyouownPointer(pointers[_tokenid]));
+    if (!_resell) {
+      resell[_tokenid]=!_resell;
+    }
+    if (_timeLock!=0) {
+      clock[_tokenid]=_timeLock;
+    }
+  }
+
+  function sendback (uint _tokenid) external {
+    address sendbackaddress=whoownsPointer(pointers[token_id]);
+    require((msg.sender==owners[_tokenid] || msg.sender==owner || msg.sender==sendbackaddress) && (clock[_tokenid]<block.timestamp && clock[token_id]>0), 'Return your own Token, Punk!');
+    uint oldprice=prices[_tokenid];
+    prices[token_id]=0;
+    transferFrom(msg.sender,sendbackaddress,_tokenid);
+    prices[token_id]=oldprice;
   }
 
   //Main transactional function. Manages all necessary Database entries regarding ownership
   function transferFrom(address _from, address _to, uint _tokenId) public payable {
-    require(owners[_tokenId]==_from, 'Address does not hold specific token');
+    require(owners[_tokenId]==_from, 'Address does not hold specific token'); //_from being an option is insecure af!
     require(prices[_tokenId]<=msg.value, 'Please provide sufficient funds');
-    payable(_from).transfer(msg.value);
+    if (msg.value!=0) {payable(_from).transfer(msg.value);}
     redoOwnerShipArray (_from,_to,_tokenId);
     owners[_tokenId]=_to;
     emit Transfer(_from, _to, _tokenId);
@@ -177,15 +224,17 @@ contract nexyohub {
   function buy(uint _tokenid) external payable {
     require(sellable[_tokenid]==true, "You only can buy NFTs marked as sellable");
     transferFrom(owners[_tokenid], msg.sender, _tokenid);
+    if (clock[_tokenid]!=0) {expirer[_tokenid]=block.timestamp+clock[_tokenid];}
     sellable[_tokenid]=false; // Still a design choice where to put the sell inteaction
   }
 
   function sell(uint _tokenid) external {
     require(owners[_tokenid]==msg.sender, "You only can sell stuff you own");
+    if (!doyouownPointer(pointers[_tokenid])) {require(resell[_tokenid]==false, "You only can sell stuff you own");}
     sellable[_tokenid]=true;
   }
 
-  //this needs a redo since only the contract can sell tokens now. Using a parameter in external view is suboptimal
+  //this needs a redo since only the contract can sell tokens block.timestamp. Using a parameter in external view is suboptimal
   function buyableTokens(address sender) external view returns(uint[] memory) {
     uint x=0;
     for (uint i=0; i<token_id; i++) {
@@ -213,9 +262,27 @@ contract nexyohub {
 
   //returns the token ids of the address given as parameter. Using a parameter in external view is suboptimal
   function myTokens(address sender) external view returns(uint[] memory) {
-    uint[] memory array;
-    array=OwnerShip[sender];
-    return array;
+    uint len=OwnerShip[sender].length;
+    if (len>0) {
+      uint x=0;
+      for (uint i=0; i<len; i++) {
+        if ((expirer[OwnerShip[sender][i]]==0 || expirer[OwnerShip[sender][i]]>=block.timestamp) || !resell[i]==true) {
+          x++;
+        }
+      }
+      uint[] memory array = new uint[](x);
+      x=0;
+      for (uint i=0; i<len; i++) {
+        if ((expirer[OwnerShip[sender][i]]==0 || expirer[OwnerShip[sender][i]]>=block.timestamp) || !resell[i]==true) {
+          array[x]=OwnerShip[sender][i];
+          x++;
+        }
+      }
+      return array;
+    } else {
+      uint[] memory array = OwnerShip[sender];
+      return array;
+    }
   }
 
   //returns all pointers currently available
@@ -232,26 +299,6 @@ contract nexyohub {
       }
     }
     return somepointers;
-  }
-
-  function priceOf(uint _tokenId) external view returns (uint) {
-    return prices[_tokenId];
-  }
-
-  function ownerOf(uint _tokenId) external view returns (address) {
-    return owners[_tokenId];
-  }
-
-  function pointerOf(uint _tokenId) external view returns (string memory) {
-    return pointers[_tokenId];
-  }
-
-  function tokensellable(uint _tokenId) external view returns (bool) {
-    return sellable[_tokenId];
-  }
-
-  function addDataOwner(address dataowner) external onlyOwner {
-    DataOwners[dataowner].push(pointer_id+10**15); //The offset used here is incredibly unelegant and should be replaced with a different mechanism
   }
 
   function whatownsDataOwner(address dataowner) public view returns(uint[] memory) {
@@ -288,6 +335,38 @@ contract nexyohub {
     return result;
   }
 
+    function priceOf(uint _tokenId) external view returns (uint) {
+      return prices[_tokenId];
+    }
+
+    function ownerOf(uint _tokenId) external view returns (address) {
+      return owners[_tokenId];
+    }
+
+    function pointerOf(uint _tokenId) external view returns (string memory) {
+      return pointers[_tokenId];
+    }
+
+    function tokensellable(uint _tokenId) external view returns (bool) {
+      return sellable[_tokenId];
+    }
+
+    function tokenresellable(uint _tokenId) external view returns (bool) {
+      return resell[_tokenId];
+    }
+
+    function tokenownable(uint _tokenId) external view returns (uint) {
+      return clock[_tokenId];
+    }
+
+    function tokenexpires(uint _tokenId) external view returns (uint) {
+      return expirer[_tokenId];
+    }
+
+  function addDataOwner(address dataowner) external onlyOwner {
+    DataOwners[dataowner].push(pointer_id+10**15); //The offset used here is incredibly unelegant and should be replaced with a different mechanism
+  }
+
   function dataowned(address ow) public view returns(uint[] memory) {
     return DataOwners[ow];
   }
@@ -320,6 +399,16 @@ contract nexyohub {
 
   function isDataOwnerthere (address dataowner) public view returns (bool){
     return DataOwners[dataowner].length!=0;
+  }
+
+  function whoownsPointer (string memory _pointer) internal view returns (address) {
+    uint len=pointerarray.length;
+    for (uint i=0; i<len;) {
+      if (compareStrings(pointerarray[i],_pointer)) {
+        return PointerOwners[i];
+        break;
+      }
+    }
   }
 
   function nextNFTid () public view returns(uint){

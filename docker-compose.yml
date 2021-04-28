@@ -21,6 +21,8 @@ services:
       - --hostname
       - '0.0.0.0'
       - --noVMErrorsOnRPCResponse
+      - --blockTime
+      - '3'
 
   gateway:
     container_name: gateway

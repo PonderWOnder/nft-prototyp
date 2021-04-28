@@ -1,5 +1,7 @@
 import React,{Component} from 'react'
 import Cred from './cred_card'
+import Mint from './Mint'
+
 class DataOwner extends Component {
 
   constructor(props) {
@@ -35,8 +37,8 @@ class DataOwner extends Component {
         <div className='flex item-center'>
           <div>
             <form onSubmit={(e) => this.handleChange(e)}>
-              <label className=''> Pointer
-                <input className='rounded-xl bg-gray-200 focus:bg-white w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
+              <label className=''> Pointer 
+                <input className='rounded-lg bg-gray-200 focus:bg-white w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
               </label>
             </form>
           </div>
@@ -47,17 +49,9 @@ class DataOwner extends Component {
             {this.state.window ? <Cred Pointer={this.state.submit} makePointer={this.props.makePointer} Menu={this.handleMenu}/> : <div></div>}
           </div>
         </div>
-        <div className='flex item-center'>
+        <div className='flex item-center grid-cols-2'>
           <div>
-            <select defaultValue='Choose here' onChange={(e) => this.handleChange(e)} placeholder='Pointers'>
-              <option selected disabled hidden>Choose here</option>
-              {this.props.Pointers.map((URI,index) =>
-                <option className='truncate' key={index+1} value={URI}>{URI}</option>
-              )}
-            </select>
-          </div>
-          <div>
-            <button className='rounded-lg px-4 hover:bg-green-400 hover:text-white' onClick={e => this.props.mint(e,this.state.submit)}>MINT</button>
+            <Mint mint={this.props.mint} mintwithOptions={this.props.mintwithOptions} Pointers={this.props.Pointers}/>
           </div>
         </div>
       </div>
