@@ -54,7 +54,7 @@ class Tokens extends Component {
                 <span>  {token[0]} </span>
                 <span className='truncate'>  {token[1]} </span>
                 <span>  {token[2]} </span>
-                {token[6] > Math.floor(new Date().getTime()/1000) || token[6]==0?
+                {(token[6] > Math.floor(new Date().getTime()/1000) || token[6]==='0') ? //need to do some type conversion to make this rock solid!
                   <button className='rounded-lg hover:bg-indigo-400 hover:text-white px-2' onClick={e => this.props.resttoken(e, token[1]+token[2],token[1],token[0])}> <span>  Connect </span> </button>:
                   <button className='rounded-lg text-gray-400 px-2'><span>  Connect </span></button>
                 }

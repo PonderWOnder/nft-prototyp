@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./boysintheband.sol";
+
 contract nexyohub {
 //The actual NFT
   mapping(uint => address) public owners;
@@ -17,6 +19,7 @@ contract nexyohub {
   mapping(uint => uint) private NFTArrayPos; //Tracks NFT postion in Ownership Array for fast ownership requests
   string name_;
   string sign_;
+  address parentaddress;
   address payable owner;
   uint token_id=0;
   uint pointer_id=0;
@@ -28,16 +31,20 @@ contract nexyohub {
   uint _minstake=32000000000000000000;
   uint stdPrice=1000000000000000000;
 
-  constructor(string memory _name) { //sign_ will get an option too!
+  constructor(string memory _name, string memory _sign, address _transactcont) { //sign_ will get an option too!
     require(msg.sender.balance >= _minstake, 'Please provide suffient Funds');
     name_=_name;
-    sign_='NXNFT';
+    sign_=_sign;
+    parentaddress=_transactcont;
     owner=payable(msg.sender);
+    nexyotransact bitb=nexyotransact(parentaddress);
+    bitb.addaddress(address(this));
+    emit create(owner, address(this));
   }
 
   modifier onlyOwner {
     require(owner==msg.sender, 'This Operation can only be accessed by the contract owner');
-    require(msg.sender.balance >= _minstake, 'Please provide suffient Funds');
+    require(msg.sender.balance >= _minstake, 'Please provide sufficient Funds');
     _;
   }
 
@@ -45,7 +52,7 @@ contract nexyohub {
     require(address(this)==msg.sender, 'The function you are trying to enter is prohibited');
     _;
   }
-
+  event create(address indexed _who, address indexed _where);
   event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
   event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
   event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
@@ -87,7 +94,7 @@ contract nexyohub {
   function revokePointers (string[] memory _pointers) public onlyOwner {
     uint len=_pointers.length;
     for (uint i=0;i<len;i++) {
-      require(isPointerthere(_pointers[i])!=true,'Pointer is already unuseable');
+      require(isPointerthere(_pointers[i])!=true,'Pointer is already unuseable'); //this seems stupid and i forgot what i was thinking
       if(pointerExists[_pointers[i]]==3) {
         pointerstoapprove--;}
       pointerExists[_pointers[i]]=2;
@@ -105,8 +112,8 @@ contract nexyohub {
     }
   }
 
-  function mint_to (address newowner, string memory pointer) public {
-    require(isDataOwnerthere(newowner), 'No Account with this Hub');
+  function mint_to (address newowner, string memory pointer, uint _timeLock) public {
+    require(isDataOwnerthere(msg.sender), 'No Account with this Hub');
     require(isPointerthere(pointer));
     require(doyouownPointer(pointer), 'You do not own this pointer');
     owners[token_id]=newowner;
@@ -116,14 +123,19 @@ contract nexyohub {
     NFTArrayPos[token_id]=len;
     pointers[token_id]=pointer;
     prices[token_id]=stdPrice;
+    resell[token_id]=true;
     sellable[token_id]=false;
+    if (_timeLock!=0) {
+      clock[token_id]=_timeLock;
+      expirer[token_id]=block.timestamp+_timeLock;
+    }
     token_id++;
   }
 
   function mint (string memory pointer) public {
     require(isPointerthere(pointer), 'Provided Pointer does not exist with contract');
     require(isDataOwnerthere(msg.sender), 'You have not sufficient rights for this action');
-    //require(doyouownPointer(pointer), 'You do not own this pointer');
+    require(doyouownPointer(pointer), 'You do not own this pointer');
     owners[token_id]=msg.sender;
     uint len;
     OwnerShip[msg.sender].push(token_id);
@@ -225,7 +237,7 @@ contract nexyohub {
     require(sellable[_tokenid]==true, "You only can buy NFTs marked as sellable");
     transferFrom(owners[_tokenid], msg.sender, _tokenid);
     if (clock[_tokenid]!=0) {expirer[_tokenid]=block.timestamp+clock[_tokenid];}
-    sellable[_tokenid]=false; // Still a design choice where to put the sell inteaction
+    sellable[_tokenid]=false; // Still a design choice where to put the sell interaction
   }
 
   function sell(uint _tokenid) external {
@@ -379,7 +391,7 @@ contract nexyohub {
     return owner;
   }
 
-  function PointerstoApprove () external onlyOwner returns(string[] memory) {
+  function PointerstoApprove () external onlyOwner view returns(string[] memory) {
     string[] memory variouspointers = new string[](pointerstoapprove);
     uint pos=0;
     uint len;
@@ -393,22 +405,23 @@ contract nexyohub {
     return variouspointers;
   }
 
-  function isPointerthere (string memory pointer) public view returns (bool){
+  function isPointerthere (string memory pointer) public view returns (bool) {
     return pointerExists[pointer]==1;
   }
 
-  function isDataOwnerthere (address dataowner) public view returns (bool){
+  function isDataOwnerthere (address dataowner) public view returns (bool) {
     return DataOwners[dataowner].length!=0;
   }
 
   function whoownsPointer (string memory _pointer) internal view returns (address) {
+    address emptyreturn;
     uint len=pointerarray.length;
     for (uint i=0; i<len;) {
       if (compareStrings(pointerarray[i],_pointer)) {
         return PointerOwners[i];
-        break;
       }
     }
+    return emptyreturn; //in the front end check for empty address
   }
 
   function nextNFTid () public view returns(uint){

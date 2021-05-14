@@ -16,18 +16,23 @@ class connect():
         self.location='/contracts/nexyohub.json' if location==None else location
         with open(path.abspath(self.location),'r') as data:
             self.contract_json=json.load(data)
-        abi=self.contract_json['abi']
-        Caddress=self.contract_json['networks'][self.web3.net.version]['address']
-        self.contract=self.web3.eth.contract(address=Caddress,abi=abi)
+        self.abi=self.contract_json['abi']
+        self.Caddress=self.contract_json['networks'][self.web3.net.version]['address']
+        self.contract=self.web3.eth.contract(address=self.Caddress,abi=self.abi)
 
-
+    def reconnect(self,add):
+        if add!=self.Caddress:
+            self.Caddress=add
+            self.contract=self.web3.eth.contract(address=self.Caddress,abi=self.abi)
 
     def getaddress (self, msghash: str, sig: str):
         return self.recover(msghash,signature=sig)
 
     def getin (self,add: str):
-        offset=len(add)-199
-        return self.checksig(add[66:67+offset],add[:66],add[67+offset:])
+        offset=len(add)-241
+        print(add[67+offset:199+offset],add[199+offset:])
+        self.reconnect(add[199+offset:])
+        return self.checksig(add[66:67+offset],add[:66],add[67+offset:199+offset])
 
     def checksig (self,token_id: str,msghash: str, sig: str):
         tokens=self.contract.functions.myTokens(self.getaddress(msghash,sig)).call()
@@ -46,3 +51,4 @@ class dataclass(): #own class is propably overkill but let's see were this goes.
     def __init__(self):
         self.owners={}
         self.logins={}
+        self.rootcontract=''

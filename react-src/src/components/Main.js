@@ -41,6 +41,7 @@ class Main extends Component {
       await this.setState({close:alternative});
     }
   }
+
   handleChange = (e) => {
     e.preventDefault();
     this.setState({submit: e.target.value}, () => {
@@ -53,7 +54,7 @@ class Main extends Component {
         <div className='flex item-center'>
           <div>
             <form onSubmit={(e) => this.handleChange(e)}>
-              <label className=''> Pointer 
+              <label className=''> Pointer
                 <input className='rounded-lg bg-gray-200 focus:bg-white w-32 px-4' type='text' placeholder='new Pointer' onChange={(e) => this.handleChange(e)}/>
               </label>
             </form>
@@ -72,7 +73,7 @@ class Main extends Component {
         </div>
         <div className='flex item-center grid-cols-2'>
           <div>
-            <Mint mint={this.props.mint} mintwithOptions={this.props.mintwithOptions} Pointers={this.props.Pointers}/>
+            <Mint mint={this.props.mint} mintto={this.props.mintto} mintwithOptions={this.props.mintwithOptions} Pointers={this.props.Pointers}/>
           </div>
         </div>
         <div className='text-center'>

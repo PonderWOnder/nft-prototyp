@@ -1,7 +1,7 @@
 version: '2.1'
 
 services:
-  
+
   node:
     container_name: node
     image: trufflesuite/ganache-cli:latest
@@ -22,7 +22,7 @@ services:
       - '0.0.0.0'
       - --noVMErrorsOnRPCResponse
       - --blockTime
-      - '3'
+      - '1'
 
   gateway:
     container_name: gateway
@@ -30,10 +30,8 @@ services:
       context: ./gateway/
       dockerfile: ./Dockerfile
     ports:
-      - "8090:80" 
+      - "8090:80"
     volumes:
       - ./gateway/app:/app
       - ./react-src/src/contracts/:/contracts
     entrypoint: ['/start-reload.sh']
-    
-
