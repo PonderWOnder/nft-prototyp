@@ -38,7 +38,7 @@ contract nexyohub {
     parentaddress=_transactcont;
     owner=payable(msg.sender);
     nexyotransact bitb=nexyotransact(parentaddress);
-    bitb.addaddress(address(this));
+    bitb.addhub(address(this));
     emit create(owner, address(this));
   }
 
@@ -298,7 +298,7 @@ contract nexyohub {
   }
 
   //returns all pointers currently available
-  function useablePointers() external view onlyOwner returns (string[] memory) {
+  function useablePointers() external view returns (string[] memory) {
     string[] memory somepointers= new string[](pointer_id-pointer_uid);
     uint len=pointerarray.length;
     uint x=0;
@@ -434,6 +434,10 @@ contract nexyohub {
 
   function returnContractName () public view returns (string memory){
     return name_;
+  }
+
+  function returnParentAddress () public view returns (address){
+    return parentaddress;
   }
 
   function returnAddress () public view returns (address){

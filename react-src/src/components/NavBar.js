@@ -53,6 +53,12 @@ class NavBar extends Component {
             <p> NFT Balance</p>
             <p>{this.props.UNFTbalance.toString()} NFT</p>
           </div>
+          <div className='mt-2'>
+            {!this.props.showCircles ?
+              <button className='focus:outline-none mt-2 rounded-lg p-1 hover:bg-indigo-400 hover:text-white' onClick={(e) => this.props.handleCircles(e)}> My Circles {this.props.CircleBalance.toString()}</button> :
+              <button className='focus:outline-none mt-2 rounded-lg p-1 bg-indigo-400 text-white hover:bg-indigo-600' onClick={(e) => this.props.handleCircles(e)}> My Circles {this.props.CircleBalance.toString()}</button>
+            }
+          </div>
         </div>
       </div>
     )

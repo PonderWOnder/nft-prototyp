@@ -76,7 +76,7 @@ class Main extends Component {
             <Mint mint={this.props.mint} mintto={this.props.mintto} mintwithOptions={this.props.mintwithOptions} Pointers={this.props.Pointers}/>
           </div>
         </div>
-        <div className='text-center'>
+        {this.props.PointerstoApprove.length>0  ?
           <div className='flex item-center'>
             <div>
               <button className='rounded-full p-1 hover:text-red-400 hover:bg-black' onClick={e => this.handleClose(e)}>{this.state.close}</button>
@@ -94,7 +94,7 @@ class Main extends Component {
             : <div></div>
             }
           </div>
-        </div>
+        :<div></div>}
       </div>
     );
   }

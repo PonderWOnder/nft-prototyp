@@ -14,7 +14,7 @@ contract('nexyohub', () => {
     address=await hub.address;
     name=await hub.returnContractName();
     owner=await hub.whoisOwner();
-    pointer='nexyo.com';
+    pointer='nexyo.io';
     console.log('Contract Name:',name);
     console.log('Contract Address:',address);
     console.log('Contract Owner:',owner);
