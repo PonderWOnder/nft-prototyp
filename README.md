@@ -40,10 +40,10 @@ Have fun!
 
 [MetaMask](https://metamask.io/) is a wallet software that can interact with most ERC compliant Ethereum Tokens. You can download MetaMask from [here](https://metamask.io/download.html)!
 To setup MetaMask, first connect to the Test RPC ganache had setup for you. Click on the network list on top of the MetaMask window and connect to the Test RPC by creating a custom RPC using the URL http://localhost:8545 under the chain ID 5777.
-<img src="/img/rpc.png" width="250">
+<p align="center"><img src="/img/rpc.png" width="250"></p>
 
 After you managed to connect to the right network, from the docker-compose log output copy the first private key and create a account in MetaMask.
-|Copy Key to-->|MetaMask|
+|<p align="center">Copy Key to--></p>|<p align="center">MetaMask</p>|
 |------------|-------------|
 |<img src="/img/ganache_log.png">|<img src="/img/wallet.png">|
 
